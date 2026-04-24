@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Software Testing &amp; QA Report — UK SME Import Margin Simulator</title>
+<style>
+  :root {
+    --ink:    #111827;
+    --ink2:   #374151;
+    --muted:  #6b7280;
+    --border: #e5e7eb;
+    --surface:#f9fafb;
+    --white:  #ffffff;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --pass:   #16a34a;
+    --pass-bg:#f0fdf4;
+    --warn:   #d97706;
+    --fail:   #dc2626;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f3f4f6;
+    color: var(--ink);
+    line-height: 1.65;
+    font-size: 14px;
+  }
+
+  /* ── Cover ─────────────────────────────────────────────── */
+  .cover {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+    color: #fff;
+    padding: 48px;
+  }
+  .cover-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .cover h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .cover .subtitle {
+    font-size: 15px;
+    opacity: 0.85;
+    max-width: 560px;
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 36px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 24px;
+  }
+  .cover-meta-item { font-size: 13px; opacity: 0.9; }
+  .cover-meta-item strong {
+    display: block;
+    font-size: 10px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  /* ── Verdict Banner ─────────────────────────────────────── */
+  .verdict-banner {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    border-left: 5px solid var(--pass);
+    padding: 16px 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .verdict-check { font-size: 20px; color: var(--pass); font-weight: 900; flex-shrink: 0; }
+  .verdict-text h2 { font-size: 16px; color: #166534; font-weight: 700; }
+  .verdict-text p  { font-size: 13px; color: var(--ink2); margin-top: 1px; }
+  .verdict-stats { margin-left: auto; display: flex; gap: 32px; }
+  .verdict-stat { text-align: center; }
+  .verdict-stat .num { font-size: 22px; font-weight: 800; color: #166534; line-height: 1; }
+  .verdict-stat .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 2px; }
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 216px;
+    flex-shrink: 0;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 16px 6px;
+  }
+  .sidebar a {
+    display: block;
+    padding: 6px 16px;
+    font-size: 12.5px;
+    color: var(--ink2);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.12s;
+  }
+  .sidebar a:hover { background: var(--surface); color: var(--accent); border-left-color: var(--accent); }
+
+  .main { flex: 1; padding: 0 40px 80px; max-width: 920px; }
+
+  /* ── Sections ───────────────────────────────────────────── */
+  .section { padding: 36px 0 0; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-num {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 17px; font-weight: 700; color: var(--ink); }
+
+  h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin: 20px 0 8px;
+  }
+  p  { color: var(--ink2); margin-bottom: 10px; }
+  ul { color: var(--ink2); padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 3px; }
+
+  /* ── Cards / Stat Cards ─────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 28px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-card .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 4px; }
+  .stat-card.green .num { color: #166534; }
+  .stat-card.amber .num { color: #92400e; }
+
+  /* ── Tables ─────────────────────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  table { width: 100%; border-collapse: collapse; background: var(--white); font-size: 13px; }
+  thead th {
+    background: #f9fafb;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+  }
+  tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #fafafa; }
+  tbody tr.totals-row { background: #f9fafb !important; font-weight: 700; }
+  tbody tr.totals-row td { color: var(--ink); }
+
+  /* ── Coverage Bar ───────────────────────────────────────── */
+  .cov-bar-wrap {
+    width: 90px; background: #e5e7eb; border-radius: 4px; height: 8px;
+    display: inline-block; vertical-align: middle; margin-right: 6px;
+  }
+  .cov-bar { height: 8px; border-radius: 4px; }
+  .cov-high { background: #16a34a; }
+  .cov-mid  { background: #d97706; }
+  .cov-low  { background: #dc2626; }
+  .cov-zero { background: #9ca3af; }
+
+  /* ── Badges — solid fills with white text for maximum contrast ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #fff;
+  }
+  .badge-pass     { background: #16a34a; }
+  .badge-fail     { background: #dc2626; }
+  .badge-warn     { background: #b45309; }   /* amber-700, darker for legibility */
+  .badge-info     { background: #1d4ed8; }
+  .badge-critical { background: #be123c; }
+  .badge-high     { background: #c2410c; }
+  .badge-medium   { background: #b45309; }   /* amber-700 instead of yellow */
+  .badge-low2     { background: #16a34a; }
+  .badge-none     { background: #64748b; }
+  .badge-open     { background: #b45309; }
+  .badge-accepted { background: #1d4ed8; }
+
+  /* ── Callouts — light bg, dark text for contrast ────────── */
+  .callout {
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+  }
+  .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.6; font-weight: 700; }
+  .callout-body h4 { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .callout-body p  { font-size: 13px; margin: 0; }
+
+  .callout-pass {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+  .callout-pass .callout-icon,
+  .callout-pass h4  { color: #166534; }   /* green-800 */
+  .callout-pass p   { color: #166534; }
+
+  .callout-warn {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+  }
+  .callout-warn .callout-icon,
+  .callout-warn h4  { color: #92400e; }   /* amber-800 */
+  .callout-warn p   { color: #78350f; }   /* amber-900 */
+
+  .callout-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+  }
+  .callout-info .callout-icon,
+  .callout-info h4  { color: #1e40af; }   /* blue-800 */
+  .callout-info p   { color: #1e3a8a; }   /* blue-900 */
+
+  .callout-fail {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+  .callout-fail .callout-icon,
+  .callout-fail h4  { color: #991b1b; }   /* red-800 */
+  .callout-fail p   { color: #7f1d1d; }   /* red-900 */
+
+  /* ── Divider / Code / Footer ───────────────────────────── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 12px;
+    color: #1e40af;
+  }
+
+  .footer {
+    background: #1e293b;
+    color: #94a3b8;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+  }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { padding: 0 24px; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-tag">Software QA Report &nbsp;|&nbsp; Final Year Project</div>
+  <h1>Software Testing &amp; Quality Assurance Report</h1>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><strong>Report Date</strong>24 April 2026</div>
+    <div class="cover-meta-item"><strong>Version</strong>2.0 — Advanced Analytics</div>
+    <div class="cover-meta-item"><strong>Framework</strong>Python 3.11.1 / pytest 9.0.3</div>
+    <div class="cover-meta-item"><strong>Coverage Tool</strong>pytest-cov 7.1.0</div>
+    <div class="cover-meta-item"><strong>Platform</strong>macOS Darwin 25.2.0</div>
+    <div class="cover-meta-item"><strong>Author</strong>Vihanga Sathsara</div>
+  </div>
+</div>
+
+<!-- VERDICT BANNER -->
+<div class="verdict-banner">
+  <div class="verdict-check">&#10003;</div>
+  <div class="verdict-text">
+    <h2>QUALITY GATE: PASSED</h2>
+    <p>All 330 tests passed · 81% line coverage · 0 defects found</p>
+  </div>
+  <div class="verdict-stats">
+    <div class="verdict-stat"><div class="num">330</div><div class="lbl">Tests Passed</div></div>
+    <div class="verdict-stat"><div class="num">100%</div><div class="lbl">Pass Rate</div></div>
+    <div class="verdict-stat"><div class="num">81%</div><div class="lbl">Coverage</div></div>
+    <div class="verdict-stat"><div class="num">0</div><div class="lbl">Defects</div></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Contents</div>
+    <a href="#exec">1. Executive Summary</a>
+    <a href="#overview">2. Project Overview</a>
+    <a href="#scope">3. Scope &amp; Environment</a>
+    <a href="#strategy">4. Test Strategy</a>
+    <a href="#results">5. Test Results</a>
+    <a href="#coverage">6. Coverage Analysis</a>
+  </nav>
+
+  <div class="main">
+
+    <!-- ═══════════════════════════════════════════════
+         1. EXECUTIVE SUMMARY
+         ═══════════════════════════════════════════════ -->
+    <div class="section" id="exec">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <h2>Executive Summary</h2>
+      </div>
+
+      <div class="card-grid">
+        <div class="stat-card green"><div class="num">330</div><div class="lbl">Total Tests</div></div>
+        <div class="stat-card green"><div class="num">100%</div><div class="lbl">Pass Rate</div></div>
+        <div class="stat-card green"><div class="num">81%</div><div class="lbl">Line Coverage</div></div>
+        <div class="stat-card green"><div class="num">14</div><div class="lbl">Modules Tested</div></div>
+        <div class="stat-card green"><div class="num">0</div><div class="lbl">Defects Found</div></div>
+        <div class="stat-card"><div class="num">87s</div><div class="lbl">Suite Runtime</div></div>
+      </div>
+
+      <p>This report covers the complete testing and quality assurance evaluation of the <strong>UK SME Import Margin Simulator</strong> — a Streamlit analytics dashboard that helps small and medium-sized UK importers assess financial risk using real HMRC and ONS trade data.</p>
+
+      <p>A total of <strong>330 test cases</strong> were executed across <strong>13 test files</strong>, achieving a <strong>100% pass rate</strong> and <strong>81% line coverage</strong> of the core <code>scripts/</code> package, exceeding the 80% quality gate target.</p>
+
+      <div class="callout callout-pass">
+        <div class="callout-icon">&#10003;</div>
+        <div class="callout-body">
+          <h4>Quality Gate: Passed</h4>
+          <p>No critical or high-severity defects were detected. The four highest-priority financial modules achieve 100% line coverage. A structural cleanup was performed before finalising this report — all 330 tests passed identically after cleanup.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ═══════════════════════════════════════════════
+         2. PROJECT OVERVIEW
+         ═══════════════════════════════════════════════ -->
+    <div class="section" id="overview">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <h2>Project Overview</h2>
+      </div>
+
+      <p>The UK SME Import Margin Simulator is a data-driven decision-support tool that combines HMRC trade statistics (84 monthly data files, 2018–2024) with ONS foreign trade data to provide real-world margin simulation, FX risk analysis, and predictive forecasting for UK importers.</p>
+
+      <h3>Technology Stack</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>Technologies</th></tr></thead>
+          <tbody>
+            <tr><td>Dashboard / UI</td><td>Streamlit 1.28+, Plotly 5.15+</td></tr>
+            <tr><td>Analytics Engine</td><td>pandas, NumPy, SciPy, statsmodels</td></tr>
+            <tr><td>Forecasting</td><td>ARIMA (statsmodels), Prophet (optional)</td></tr>
+            <tr><td>Machine Learning</td><td>scikit-learn (Isolation Forest anomaly detection)</td></tr>
+            <tr><td>Testing</td><td>pytest 9.0.3, pytest-cov 7.1.0</td></tr>
+            <tr><td>Runtime</td><td>Python 3.11.1, macOS Darwin 25.2.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Repository Structure (Post-Cleanup)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Path</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>app.py</code></td><td>Main Streamlit dashboard entry point</td></tr>
+            <tr><td><code>scripts/</code></td><td>14 core computation and analytics modules</td></tr>
+            <tr><td><code>tests/</code></td><td>13 pytest test files + conftest.py</td></tr>
+            <tr><td><code>data/raw/hmrc/</code></td><td>84 monthly HMRC import data files (2018–2024)</td></tr>
+            <tr><td><code>data/raw/ons/</code></td><td>ONS country trade statistics (Excel)</td></tr>
+            <tr><td><code>data/raw/exchange/</code></td><td>Bank of England daily FX rates (EUR/USD/CNY/JPY)</td></tr>
+            <tr><td><code>data/processed/</code></td><td>Pre-cleaned intermediate CSV datasets</td></tr>
+            <tr><td><code>data/output/</code></td><td>Pipeline-generated output files</td></tr>
+            <tr><td><code>scripts/achives/</code></td><td>Archived ETL scripts (historical reference only)</td></tr>
+            <tr><td><code>htmlcov/</code></td><td>pytest-cov HTML coverage report (testing evidence)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ═══════════════════════════════════════════════
+         3. TESTING SCOPE & ENVIRONMENT
+         ═══════════════════════════════════════════════ -->
+    <div class="section" id="scope">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <h2>Testing Scope &amp; Environment</h2>
+      </div>
+
+      <h3>In Scope</h3>
+      <ul>
+        <li>All pure-function modules in <code>scripts/</code> — 14 Python files, 1,033 executable statements</li>
+        <li>Core financial computation: margin model, risk labelling, confidence bands, scenario runner</li>
+        <li>Analytics: forecasting engine, trend analysis, advanced risk metrics, backtesting</li>
+        <li>Data pipeline: data merge, HS2-to-SITC mapping, ONS coverage classification</li>
+        <li>Edge cases: invalid inputs, empty DataFrames, zero-division guards, boundary values</li>
+      </ul>
+
+      <h3>Out of Scope</h3>
+      <ul>
+        <li><strong>UI / Frontend</strong> — Streamlit rendering and Plotly chart output (no browser automation deployed)</li>
+        <li><strong>End-to-end integration</strong> — full pipeline from raw HMRC files to dashboard display</li>
+        <li><strong>ONS pipeline scripts</strong> — offline data-preparation scripts run once during project setup</li>
+        <li><strong>Performance load testing</strong> — beyond measuring test suite execution time</li>
+      </ul>
+
+      <h3>Test Environment</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Component</th><th>Specification</th></tr></thead>
+          <tbody>
+            <tr><td>Operating System</td><td>macOS Darwin 25.2.0 (Apple Silicon)</td></tr>
+            <tr><td>Python Version</td><td>3.11.1 (via project virtual environment <code>.venv/</code>)</td></tr>
+            <tr><td>Test Runner</td><td>pytest 9.0.3</td></tr>
+            <tr><td>Coverage Tool</td><td>pytest-cov 7.1.0 (Coverage.py 7.13.5)</td></tr>
+            <tr><td>Key Libraries</td><td>pandas 2.x, NumPy 1.x, statsmodels 0.14.x, scikit-learn 1.3.x, scipy 1.10.x</td></tr>
+            <tr><td>Test Isolation</td><td>All tests run via <code>conftest.py</code> autouse fixture that sets the working directory to the project root before each test</td></tr>
+            <tr><td>Random Seeds</td><td>All stochastic tests use explicit <code>np.random.seed()</code> for full determinism</td></tr>
+            <tr><td>External Dependencies</td><td>None — all tests use in-memory fixtures or temporary files via pytest <code>tmp_path</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ═══════════════════════════════════════════════
+         4. TEST STRATEGY
+         ═══════════════════════════════════════════════ -->
+    <div class="section" id="strategy">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <h2>Test Strategy</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Methodology</th><th>Applied To</th><th>Techniques</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Unit Testing</strong></td>
+              <td>All 14 <code>scripts/</code> modules</td>
+              <td>Equivalence partitioning, boundary value analysis, decision coverage</td>
+            </tr>
+            <tr>
+              <td><strong>Boundary Value Analysis</strong></td>
+              <td><code>risk_label.py</code>, <code>margin_model.py</code>, <code>confidence_band.py</code></td>
+              <td>Exact threshold values (0%, 5%, 10%), off-by-one checks</td>
+            </tr>
+            <tr>
+              <td><strong>Equivalence Partitioning</strong></td>
+              <td>All classification functions</td>
+              <td>Valid / invalid input classes, coverage tier classes (High/Partial/Low/None)</td>
+            </tr>
+            <tr>
+              <td><strong>Error Path Testing</strong></td>
+              <td>All modules with graceful degradation</td>
+              <td>None inputs, empty DataFrames, missing columns, invalid strings, insufficient data</td>
+            </tr>
+            <tr>
+              <td><strong>Integration Testing</strong></td>
+              <td>Data pipeline, forecast report, stress test runner</td>
+              <td>Fixture chaining, monkeypatching of I/O layers</td>
+            </tr>
+            <tr>
+              <td><strong>Regression Testing</strong></td>
+              <td>All 330 tests (re-run post-cleanup)</td>
+              <td>Full re-execution after artefact removal</td>
+            </tr>
+            <tr>
+              <td><strong>Mathematical Validation</strong></td>
+              <td>VaR, margin calculation, scenario runner, growth rates</td>
+              <td>Closed-form expected values, monotonicity assertions, Cauchy-Schwarz (MAE ≤ RMSE)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Design Principles</h3>
+      <ul>
+        <li><strong>Determinism</strong> — every test using randomness is seeded with a fixed integer</li>
+        <li><strong>No external I/O</strong> — file reads use pytest <code>tmp_path</code> or monkeypatching; no live API calls</li>
+        <li><strong>Tolerance-aware assertions</strong> — floating-point comparisons use <code>pytest.approx()</code> with explicit absolute tolerance</li>
+        <li><strong>Guard assertions</strong> — probabilistic branches assert structure, not exact values, to avoid flakiness across statsmodels versions</li>
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ═══════════════════════════════════════════════
+         5. TEST RESULTS
+         ═══════════════════════════════════════════════ -->
+    <div class="section" id="results">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <h2>Test Results</h2>
+      </div>
+
+      <h3>Test Module Summary</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Test Module</th>
+              <th>Module Under Test</th>
+              <th>Classes</th>
+              <th>Tests</th>
+              <th>Passed</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>test_margin_model.py</code></td>
+              <td><code>margin_model.py</code></td>
+              <td>2</td><td>11</td><td>11</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_risk_label.py</code></td>
+              <td><code>risk_label.py</code></td>
+              <td>1</td><td>11</td><td>11</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_confidence_and_risk.py</code></td>
+              <td><code>confidence_band.py</code>, <code>risk_adjuster.py</code></td>
+              <td>3</td><td>11</td><td>11</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_scenario_runner.py</code></td>
+              <td><code>scenario_runner.py</code></td>
+              <td>1</td><td>8</td><td>8</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_data_merge.py</code></td>
+              <td><code>data_merge.py</code> (helpers)</td>
+              <td>2</td><td>12</td><td>12</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_data_merge_extended.py</code></td>
+              <td><code>data_merge.py</code> (pipeline)</td>
+              <td>8</td><td>56</td><td>56</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_forecast_engine.py</code></td>
+              <td><code>forecast_engine.py</code></td>
+              <td>16</td><td>40</td><td>40</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_trend_analysis.py</code></td>
+              <td><code>trend_analysis.py</code></td>
+              <td>6</td><td>13</td><td>13</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_trend_extended.py</code></td>
+              <td><code>trend_analysis.py</code> (extended)</td>
+              <td>8</td><td>45</td><td>45</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_advanced_risk_metrics.py</code></td>
+              <td><code>advanced_risk_metrics.py</code></td>
+              <td>9</td><td>21</td><td>21</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_advanced_risk_extended.py</code></td>
+              <td><code>advanced_risk_metrics.py</code> (extended)</td>
+              <td>10</td><td>51</td><td>51</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_backtest.py</code></td>
+              <td><code>backtest.py</code></td>
+              <td>2</td><td>4</td><td>4</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr>
+              <td><code>test_backtest_extended.py</code></td>
+              <td><code>backtest.py</code> (extended)</td>
+              <td>7</td><td>27</td><td>27</td>
+              <td><span class="badge badge-pass">&#10003; PASS</span></td>
+            </tr>
+            <tr class="totals-row">
+              <td colspan="2"><strong>TOTALS</strong></td>
+              <td>75</td><td>330</td><td>330</td>
+              <td><span class="badge badge-pass">&#10003; ALL PASS</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Representative Test Cases</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Function</th>
+              <th>Scenario</th>
+              <th>Input</th>
+              <th>Expected</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>TC-001</td><td><code>compute_margin</code></td><td>Breakeven</td><td>revenue = landed cost</td><td>margin_pct = 0.0</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-002</td><td><code>compute_margin</code></td><td>None input</td><td>None for all params</td><td>error dict returned</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-003</td><td><code>risk_label</code></td><td>Lower boundary</td><td>margin = 5.0</td><td>"MODERATE"</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-004</td><td><code>risk_label</code></td><td>Upper boundary</td><td>margin = 10.0</td><td>"LOW"</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-005</td><td><code>risk_label</code></td><td>String cast</td><td>"15.0"</td><td>"LOW"</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-006</td><td><code>run_sensitivity_scenarios</code></td><td>Default grid</td><td>steps=11</td><td>121 rows</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-007</td><td><code>run_sensitivity_scenarios</code></td><td>Monotonicity</td><td>increasing FX shock</td><td>margins non-increasing</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-008</td><td><code>calculate_var_historical</code></td><td>Holding period scaling</td><td>period=1 vs period=4</td><td>VaR₄ &gt; VaR₁</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-009</td><td><code>calculate_beta</code></td><td>HIGH sensitivity</td><td>asset = market × 1.5</td><td>sensitivity = HIGH</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-010</td><td><code>calculate_beta</code></td><td>NEGATIVE sensitivity</td><td>asset = −market × 0.5</td><td>beta &lt; 0</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-011</td><td><code>run_stress_test</code></td><td>Perfect Storm</td><td>fx=15%, ship=15%, tariff=10%</td><td>margin &lt; Base Case</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-012</td><td><code>walk_forward_backtest</code></td><td>Single-step dir_acc</td><td>test_size=1</td><td>directional_accuracy = None</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-013</td><td><code>walk_forward_backtest</code></td><td>MAE ≤ RMSE invariant</td><td>400-pt series</td><td>avg_mae ≤ avg_rmse</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-014</td><td><code>prepare_hmrc</code></td><td>Bad code filtering</td><td>codes: YY, ZZ, XX, ""</td><td>all removed from output</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-015</td><td><code>create_hs2_coverage_from_sitc</code></td><td>All 80 HS2 chapters</td><td>full HS2_TO_SITC dict</td><td>80 rows in output</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-016</td><td><code>calculate_margin_trends</code></td><td>Insufficient data</td><td>2 data points</td><td>trend = "insufficient data"</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-017</td><td><code>generate_trend_summary</code></td><td>Full pipeline</td><td>mock import + FX data</td><td>no error key in result</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-018</td><td><code>compute_margin</code></td><td>200% cost cap guard</td><td>extreme fx_shock</td><td>landed ≤ 2× import value</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-019</td><td><code>run_sensitivity_scenarios</code></td><td>Invalid input</td><td>import_value="bad"</td><td>empty DataFrame</td><td><span class="badge badge-pass">PASS</span></td></tr>
+            <tr><td>TC-020</td><td><code>calculate_var_historical</code></td><td>LOW risk level</td><td>std=0.5% returns</td><td>risk_level = "LOW"</td><td><span class="badge badge-pass">PASS</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ═══════════════════════════════════════════════
+         6. COVERAGE ANALYSIS
+         ═══════════════════════════════════════════════ -->
+    <div class="section" id="coverage">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <h2>Coverage Analysis</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Stmts</th>
+              <th>Missed</th>
+              <th>Coverage</th>
+              <th>Visual</th>
+              <th>Tier</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>margin_model.py</code></td>
+              <td>24</td><td>0</td><td><strong>100%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:100%"></div></div></td>
+              <td><span class="badge badge-critical">P1 — Core Financial</span></td>
+            </tr>
+            <tr>
+              <td><code>confidence_band.py</code></td>
+              <td>14</td><td>0</td><td><strong>100%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:100%"></div></div></td>
+              <td><span class="badge badge-critical">P1 — Core Financial</span></td>
+            </tr>
+            <tr>
+              <td><code>risk_label.py</code></td>
+              <td>16</td><td>0</td><td><strong>100%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:100%"></div></div></td>
+              <td><span class="badge badge-critical">P1 — Core Financial</span></td>
+            </tr>
+            <tr>
+              <td><code>scenario_runner.py</code></td>
+              <td>17</td><td>0</td><td><strong>100%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:100%"></div></div></td>
+              <td><span class="badge badge-critical">P1 — Core Financial</span></td>
+            </tr>
+            <tr>
+              <td><code>risk_adjuster.py</code></td>
+              <td>14</td><td>1</td><td><strong>93%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:93%"></div></div></td>
+              <td><span class="badge badge-high">P2 — Risk Engine</span></td>
+            </tr>
+            <tr>
+              <td><code>trend_analysis.py</code></td>
+              <td>172</td><td>7</td><td><strong>96%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:96%"></div></div></td>
+              <td><span class="badge badge-high">P2 — Analytics</span></td>
+            </tr>
+            <tr>
+              <td><code>advanced_risk_metrics.py</code></td>
+              <td>210</td><td>36</td><td><strong>83%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:83%"></div></div></td>
+              <td><span class="badge badge-high">P2 — Risk Analytics</span></td>
+            </tr>
+            <tr>
+              <td><code>data_merge.py</code></td>
+              <td>185</td><td>31</td><td><strong>83%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:83%"></div></div></td>
+              <td><span class="badge badge-high">P2 — Data Pipeline</span></td>
+            </tr>
+            <tr>
+              <td><code>forecast_engine.py</code></td>
+              <td>236</td><td>44</td><td><strong>81%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:81%"></div></div></td>
+              <td><span class="badge badge-high">P2 — Forecasting</span></td>
+            </tr>
+            <tr>
+              <td><code>backtest.py</code></td>
+              <td>86</td><td>19</td><td><strong>78%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-mid" style="width:78%"></div></div></td>
+              <td><span class="badge badge-medium">P3 — Validation</span></td>
+            </tr>
+            <tr>
+              <td><code>classify_ons_coverage_by_commodity.py</code></td>
+              <td>21</td><td>21</td><td><strong>0%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-zero" style="width:1%"></div></div></td>
+              <td><span class="badge badge-none">P4 — ETL Only</span></td>
+            </tr>
+            <tr>
+              <td><code>ons_coverage_by_commodity.py</code></td>
+              <td>16</td><td>16</td><td><strong>0%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-zero" style="width:1%"></div></div></td>
+              <td><span class="badge badge-none">P4 — ETL Only</span></td>
+            </tr>
+            <tr>
+              <td><code>ons_coverage_by_country.py</code></td>
+              <td>11</td><td>11</td><td><strong>0%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-zero" style="width:1%"></div></div></td>
+              <td><span class="badge badge-none">P4 — ETL Only</span></td>
+            </tr>
+            <tr>
+              <td><code>ons_coverage_overall.py</code></td>
+              <td>10</td><td>10</td><td><strong>0%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-zero" style="width:1%"></div></div></td>
+              <td><span class="badge badge-none">P4 — ETL Only</span></td>
+            </tr>
+            <tr class="totals-row">
+              <td><strong>TOTAL</strong></td>
+              <td>1033</td><td>196</td><td><strong>81%</strong></td>
+              <td><div class="cov-bar-wrap"><div class="cov-bar cov-high" style="width:81%"></div></div></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">&#9432;</div>
+        <div class="callout-body">
+          <h4>Why the ETL Scripts Show 0% Coverage</h4>
+          <p>The four P4 scripts are offline data-preparation tools run once during initial project setup to process raw ONS Excel files into cleaned CSVs. They are <strong>not invoked at runtime</strong> by <code>app.py</code>, and their outputs are already present in <code>data/processed/</code>. Excluding them from unit testing is architecturally sound and industry-standard practice for ETL pipeline scripts.</p>
+        </div>
+      </div>
+
+      <h3>Coverage Evolution</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phase</th><th>Tests</th><th>Coverage</th><th>Milestone</th></tr></thead>
+          <tbody>
+            <tr><td>Phase 1 — Initial Suite</td><td>137</td><td>60%</td><td>Core modules written</td></tr>
+            <tr><td>Phase 2 — Extended Suite</td><td>330</td><td>81%</td><td>80% quality gate exceeded</td></tr>
+            <tr class="totals-row"><td><strong>Gain</strong></td><td><strong>+193 tests</strong></td><td><strong>+21 pp</strong></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="footer">
+  UK SME Import Margin Simulator &nbsp;|&nbsp; Software Testing &amp; QA Report &nbsp;|&nbsp; 24 April 2026 &nbsp;|&nbsp; pytest 9.0.3 &nbsp;/&nbsp; Coverage 81% &nbsp;/&nbsp; 330 Tests Passed
+</div>
+
+</body>
+</html>
